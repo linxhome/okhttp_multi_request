@@ -28,6 +28,11 @@ import okhttp3.internal.assertThreadHoldsLock
 import okhttp3.internal.canReuseConnectionFor
 import okhttp3.internal.closeQuietly
 import okhttp3.internal.http.ExchangeCodec
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Attempts to find the connections for a sequence of exchanges. This uses the following strategies:
@@ -53,7 +58,8 @@ class ExchangeFinder(
   private val connectionPool: RealConnectionPool,
   private val address: Address,
   private val call: Call,
-  private val eventListener: EventListener
+  private val eventListener: EventListener,
+  private var threadPool:ExecutorService? = null
 ) {
   private var routeSelection: RouteSelector.Selection? = null
 
@@ -63,6 +69,12 @@ class ExchangeFinder(
   private var connectingConnection: RealConnection? = null
   private var hasStreamFailure = false
   private var nextRouteToTry: Route? = null
+
+  init {
+      if(threadPool == null) {
+        threadPool = Executors.newCachedThreadPool()
+      }
+  }
 
   fun find(
     client: OkHttpClient,
@@ -108,13 +120,32 @@ class ExchangeFinder(
     doExtensiveHealthChecks: Boolean
   ): RealConnection {
     while (true) {
-      val candidate = findConnection(
+      val firstFinder = FindConnectionTask(this, 0,
+              connectTimeout = connectTimeout,
+              readTimeout = readTimeout,
+              writeTimeout = writeTimeout,
+              pingIntervalMillis = pingIntervalMillis,
+              connectionRetryEnabled = connectionRetryEnabled)
+      val secondFinder = FindConnectionTask(this, 200,
+              connectTimeout = connectTimeout,
+              readTimeout = readTimeout,
+              writeTimeout = writeTimeout,
+              pingIntervalMillis = pingIntervalMillis,
+              connectionRetryEnabled = connectionRetryEnabled)
+      firstFinder.combineTask(secondFinder)
+      val firstTask = FutureTask(firstFinder)
+      val secondTask = FutureTask(secondFinder)
+      threadPool?.submit(firstTask)
+      threadPool?.submit(secondTask)
+      val candidate = firstTask.get() ?: secondTask.get() ?: continue
+
+      /*val candidate = findConnection(
           connectTimeout = connectTimeout,
           readTimeout = readTimeout,
           writeTimeout = writeTimeout,
           pingIntervalMillis = pingIntervalMillis,
           connectionRetryEnabled = connectionRetryEnabled
-      )
+      )*/
 
       // If this is a brand new connection, we can skip the extensive health checks.
       synchronized(connectionPool) {
@@ -139,7 +170,7 @@ class ExchangeFinder(
    * then the pool, finally building a new connection.
    */
   @Throws(IOException::class)
-  private fun findConnection(
+   fun findConnection(
     connectTimeout: Int,
     readTimeout: Int,
     writeTimeout: Int,
@@ -316,4 +347,44 @@ class ExchangeFinder(
         transmitter.connection!!.routeFailureCount == 0 &&
         transmitter.connection!!.route().address.url.canReuseConnectionFor(address.url)
   }
+}
+
+class FindConnectionTask(val exchange: ExchangeFinder,
+                         val waitTimeMills:Int,
+                         val connectTimeout: Int,
+                         val readTimeout: Int,
+                         val writeTimeout: Int,
+                         val pingIntervalMillis: Int,
+                         val connectionRetryEnabled: Boolean) : Callable<RealConnection?> {
+
+  private val connectRet by lazy {
+    AtomicBoolean(false)
+  }
+  private var otherConnectRet:AtomicBoolean? = null
+
+   fun combineTask(other:FindConnectionTask) {
+    this.otherConnectRet = other.connectRet
+    other.otherConnectRet = this.connectRet
+  }
+
+  override fun call(): RealConnection? {
+    try {
+        Thread.sleep(waitTimeMills.toLong())
+    } finally {
+        if(otherConnectRet?.get() == true) {
+          return null
+        }
+    }
+
+    return exchange.findConnection(
+            connectTimeout,
+            readTimeout,
+            writeTimeout,
+            pingIntervalMillis,
+            connectionRetryEnabled
+    ).apply {
+      connectRet.set(true)
+    }
+  }
+
 }

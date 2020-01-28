@@ -53,6 +53,7 @@ class Transmitter(
 ) {
   private val connectionPool: RealConnectionPool = client.connectionPool.delegate
   private val eventListener: EventListener = client.eventListenerFactory.create(call)
+  private val threadpool = client.threadPool
   private val timeout = object : AsyncTimeout() {
     override fun timedOut() {
       cancel()
@@ -135,7 +136,7 @@ class Transmitter(
 
     this.request = request
     this.exchangeFinder = ExchangeFinder(
-        this, connectionPool, createAddress(request.url), call, eventListener)
+        this, connectionPool, createAddress(request.url), call, eventListener,threadpool)
   }
 
   private fun createAddress(url: HttpUrl): Address {

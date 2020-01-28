@@ -44,6 +44,7 @@ import okhttp3.internal.ws.RealWebSocket
 import okio.Sink
 import okio.Source
 import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
+import java.util.concurrent.Executors
 
 /**
  * Factory for [calls][Call], which can be used to send HTTP requests and read their responses.
@@ -208,6 +209,10 @@ open class OkHttpClient internal constructor(
 
   /** Web socket and HTTP/2 ping interval (in milliseconds). By default pings are not sent. */
   @get:JvmName("pingIntervalMillis") val pingIntervalMillis: Int = builder.pingInterval
+
+  val threadPool by lazy {
+    Executors.newCachedThreadPool()
+  }
 
   constructor() : this(Builder())
 
