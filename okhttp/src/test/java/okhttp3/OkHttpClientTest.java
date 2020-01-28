@@ -308,5 +308,7 @@ public final class OkHttpClientTest {
     client = new OkHttpClient.Builder().proxySelector(new FakeProxySelector()).build();
     assertThat(client.proxy()).isNull();
     assertThat(client.proxySelector()).isInstanceOf(FakeProxySelector.class);
+
+
   }
 }

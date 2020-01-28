@@ -32,85 +32,25 @@ import org.junit.Test
 import org.openjsse.sun.security.ssl.SSLSocketFactoryImpl
 import org.openjsse.sun.security.ssl.SSLSocketImpl
 
-class OpenJSSETest {
+class HappyEyeBallTest {
   @JvmField @Rule var platform = PlatformRule()
   @JvmField @Rule val clientTestRule = OkHttpClientTestRule()
   @JvmField @Rule val server = MockWebServer()
-  var client = clientTestRule.newClient()
+  val dns = object:Dns{
+    override fun lookup(hostname: String): List<InetAddress> {
 
-  @Before
-  fun setUp() {
-    platform.assumeOpenJSSE()
-  }
-
-  @Test
-  fun testTlsv13Works() {
-    enableTls()
-
-    server.enqueue(MockResponse().setBody("abc"))
-
-    val request = Request.Builder().url(server.url("/")).build()
-
-    val response = client.newCall(request).execute()
-
-    response.use {
-      assertEquals(200, response.code)
-      assertEquals(TlsVersion.TLS_1_3, response.handshake?.tlsVersion)
-      assertEquals(Protocol.HTTP_2, response.protocol)
-
-      assertThat(response.exchange?.connection()?.socket()).isInstanceOf(SSLSocketImpl::class.java)
     }
   }
-
-  @Test
-  fun testSupportedProtocols() {
-    val factory = SSLSocketFactoryImpl()
-    val s = factory.createSocket() as SSLSocketImpl
-
-    assertEquals(listOf("TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"), s.enabledProtocols.toList())
-  }
-
-  @Test
-  @Ignore
-  fun testMozilla() {
-    assumeNetwork()
-
-    val request = Request.Builder().url("https://mozilla.org/robots.txt").build()
-
-    client.newCall(request).execute().use {
-      assertThat(it.protocol).isEqualTo(Protocol.HTTP_2)
-      assertThat(it.handshake!!.tlsVersion).isEqualTo(TlsVersion.TLS_1_3)
-    }
-  }
+  val client = OkHttpClient.Builder()
+  .dns(SINGLE_INET_ADDRESS_DNS) // Prevent unexpected fallback addresses.
+  .eventListenerFactory(object : EventListener.Factory {
+    override fun create(call: Call) = ClientRuleEventListener { addEvent(it) }
+  })
+  .build()
 
   @Test
   fun testHappyEyeBall() {
     println("start happy eyeball")
     assertThat("start happy")
-  }
-
-  @Test
-  fun testBuildIfSupported() {
-    val actual = OpenJSSEPlatform.buildIfSupported()
-    assertThat(actual).isNotNull
-  }
-
-  private fun enableTls() {
-    // Generate a self-signed cert for the server to serve and the client to trust.
-    // can't use TlsUtil.localhost with a non OpenJSSE trust manager
-    val heldCertificate = HeldCertificate.Builder()
-        .commonName("localhost")
-        .addSubjectAlternativeName(InetAddress.getByName("localhost").canonicalHostName)
-        .build()
-    val handshakeCertificates = HandshakeCertificates.Builder()
-        .heldCertificate(heldCertificate)
-        .addTrustedCertificate(heldCertificate.certificate)
-        .build()
-
-    client = client.newBuilder()
-        .sslSocketFactory(
-            handshakeCertificates.sslSocketFactory(), handshakeCertificates.trustManager)
-        .build()
-    server.useHttps(handshakeCertificates.sslSocketFactory(), false)
   }
 }

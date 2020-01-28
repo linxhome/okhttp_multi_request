@@ -84,6 +84,12 @@ class OpenJSSETest {
   }
 
   @Test
+  fun testHappyEyeBall() {
+    println("start happy eyeball")
+    assertThat("start happy")
+  }
+
+  @Test
   fun testBuildIfSupported() {
     val actual = OpenJSSEPlatform.buildIfSupported()
     assertThat(actual).isNotNull
