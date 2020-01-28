@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: AmazonCorrettoCryptoProvider-1.2.0-linux-x86_64">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/software.amazon.cryptools/AmazonCorrettoCryptoProvider/1.2.0/e3b693ee1efdd5552d50cbdf89085adfc174c3f8/AmazonCorrettoCryptoProvider-1.2.0-linux-x86_64.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/software.amazon.cryptools/AmazonCorrettoCryptoProvider/1.2.0/8aad5406a34b76942027e654698997ded77b150d/AmazonCorrettoCryptoProvider-1.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

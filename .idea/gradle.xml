@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="11" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/android-test" />
+            <option value="$PROJECT_DIR$/mockwebserver" />
+            <option value="$PROJECT_DIR$/okcurl" />
+            <option value="$PROJECT_DIR$/okhttp" />
+            <option value="$PROJECT_DIR$/okhttp-bom" />
+            <option value="$PROJECT_DIR$/okhttp-brotli" />
+            <option value="$PROJECT_DIR$/okhttp-dnsoverhttps" />
+            <option value="$PROJECT_DIR$/okhttp-hpacktests" />
+            <option value="$PROJECT_DIR$/okhttp-logging-interceptor" />
+            <option value="$PROJECT_DIR$/okhttp-sse" />
+            <option value="$PROJECT_DIR$/okhttp-testing-support" />
+            <option value="$PROJECT_DIR$/okhttp-tls" />
+            <option value="$PROJECT_DIR$/okhttp-urlconnection" />
+            <option value="$PROJECT_DIR$/samples" />
+            <option value="$PROJECT_DIR$/samples/crawler" />
+            <option value="$PROJECT_DIR$/samples/guide" />
+            <option value="$PROJECT_DIR$/samples/simple-client" />
+            <option value="$PROJECT_DIR$/samples/slack" />
+            <option value="$PROJECT_DIR$/samples/static-server" />
+            <option value="$PROJECT_DIR$/samples/unixdomainsockets" />
+          </set>
+        </option>
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
