@@ -139,6 +139,7 @@ class ExchangeFinder(
       threadPool?.submit(secondTask)
       val candidate = firstTask.get() ?: secondTask.get() ?: continue
 
+      println("finder is $candidate")
       /*val candidate = findConnection(
           connectTimeout = connectTimeout,
           readTimeout = readTimeout,

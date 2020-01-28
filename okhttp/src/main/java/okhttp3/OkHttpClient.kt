@@ -210,6 +210,7 @@ open class OkHttpClient internal constructor(
   /** Web socket and HTTP/2 ping interval (in milliseconds). By default pings are not sent. */
   @get:JvmName("pingIntervalMillis") val pingIntervalMillis: Int = builder.pingInterval
 
+  val threadPool by lazy {
     Executors.newCachedThreadPool()
   }
 

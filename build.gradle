@@ -251,8 +251,8 @@ subprojects { project ->
   publishing {
     if (!bom) {
       java {
-        withJavadocJar()
-        withSourcesJar()
+        //withJavadocJar()
+        //withSourcesJar()
       }
     }
 

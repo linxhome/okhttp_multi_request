@@ -36,21 +36,23 @@ class HappyEyeBallTest {
   @JvmField @Rule var platform = PlatformRule()
   @JvmField @Rule val clientTestRule = OkHttpClientTestRule()
   @JvmField @Rule val server = MockWebServer()
-  val dns = object:Dns{
+  val dns = object:Dns {
     override fun lookup(hostname: String): List<InetAddress> {
-
+      if(hostname == "www.taobao.com") {
+        return listOf<InetAddress>(InetAddress.getByName("113.96.109.101"),
+                InetAddress.getByName("113.96.109.100"))
+      }
+      return Dns.SYSTEM.lookup(hostname)
     }
   }
-  val client = OkHttpClient.Builder()
-  .dns(SINGLE_INET_ADDRESS_DNS) // Prevent unexpected fallback addresses.
-  .eventListenerFactory(object : EventListener.Factory {
-    override fun create(call: Call) = ClientRuleEventListener { addEvent(it) }
-  })
-  .build()
+  val client = OkHttpClient.Builder().dns(dns).build()
+
 
   @Test
   fun testHappyEyeBall() {
     println("start happy eyeball")
     assertThat("start happy")
+    val resp = client.newCall(Request.Builder().url("https://www.taobao.com").build()).execute()
+    assertThat(resp.code == 200)
   }
 }
